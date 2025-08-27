@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
-<title>SpinChoice.io | Professional Spinner</title>
+<title>SpinChoice.io</title>
 <style>
 body { font-family:"Segoe UI",sans-serif; display:flex; flex-direction:column; align-items:center; justify-content:center; height:100vh; margin:0; background:linear-gradient(135deg,#74ebd5,#9face6); }
 #container { position:relative; width:90vmin; max-width:500px; }
@@ -12,14 +12,13 @@ canvas { width:100%; height:100%; border-radius:50%; display:block; }
   width:0; height:0; 
   border-left:25px solid transparent; 
   border-right:25px solid transparent; 
-  border-top:50px solid #e63946; /* pointing DOWN */
+  border-top:50px solid #e63946; /* points DOWN */
   position:absolute; 
   top:-50px; left:50%; 
   transform:translateX(-50%); 
   z-index:10;
-  filter:drop-shadow(0 3px 5px rgba(0,0,0,0.4));
 }
-button { margin-top:20px; padding:12px 20px; font-size:16px; font-weight:700; color:white; background:#457b9d; border:none; border-radius:8px; cursor:pointer; transition:background 0.3s; }
+button { margin-top:20px; padding:12px 20px; font-size:16px; font-weight:700; color:white; background:#457b9d; border:none; border-radius:8px; cursor:pointer; }
 button:hover { background:#1d3557; }
 #winner { margin-top:15px; font-size:20px; font-weight:700; color:#222; }
 </style>
@@ -56,7 +55,6 @@ function drawWheel() {
     ctx.fillStyle = `hsl(${i*360/slices},70%,65%)`;
     ctx.fill();
     ctx.strokeStyle = "#333";
-    ctx.lineWidth = 2;
     ctx.stroke();
 
     ctx.save();
@@ -82,8 +80,8 @@ function spinWheel() {
   const winnerName = sequence[spinStep];
   const winnerIndex = remaining.indexOf(winnerName);
 
-  // target angle so winner lands at top center
-  const stopAngle = 360*5 + (winnerIndex*sliceAngle + sliceAngle/2);
+  // target rotation so winner slice is at 270° (top, under pointer)
+  const stopAngle = 360*5 + (270 - (winnerIndex*sliceAngle + sliceAngle/2));
 
   let start=null;
   const duration = 4500;
@@ -92,7 +90,7 @@ function spinWheel() {
     const progress = Math.min((timestamp-start)/duration,1);
     const eased = 1-Math.pow(1-progress,3);
     const angle = stopAngle*eased;
-    canvas.style.transform = `rotate(${angle}deg)`; // clockwise
+    canvas.style.transform = `rotate(${angle}deg)`;
 
     if(progress<1){
       requestAnimationFrame(animate);
