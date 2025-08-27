@@ -5,43 +5,77 @@
 <meta name="viewport" content="width=device-width,initial-scale=1">
 <title>SpinChoice.io</title>
 <style>
+/* Global look */
 body {
+  margin: 0;
   font-family: "Segoe UI", sans-serif;
+  background: linear-gradient(135deg, #f0f4f8, #e8ecf2);
   display: flex;
   flex-direction: column;
+  min-height: 100vh;
+}
+
+/* Header bar */
+header {
+  width: 100%;
+  background: #1d3557;
+  color: white;
+  padding: 15px 25px;
+  font-size: 22px;
+  font-weight: 600;
+  box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+  text-align: center;
+}
+
+/* Card container */
+main {
+  flex: 1;
+  display: flex;
   align-items: center;
   justify-content: center;
-  height: 100vh;
-  margin: 0;
-  background: #f4f6f9;
+  width: 100%;
 }
+#card {
+  background: white;
+  border-radius: 12px;
+  padding: 30px 20px 40px;
+  box-shadow: 0 6px 20px rgba(0,0,0,0.12);
+  text-align: center;
+  max-width: 600px;
+  width: 95%;
+  position: relative;
+}
+
+/* Wheel & pointer */
 #container {
   position: relative;
-  width: 90vmin;
-  max-width: 500px;
+  width: 90%;
+  max-width: 450px;
+  margin: 0 auto;
 }
 canvas {
   width: 100%;
   height: 100%;
   border-radius: 50%;
-  box-shadow: 0 4px 15px rgba(0,0,0,0.2);
   display: block;
 }
 #pointer {
   width: 0;
   height: 0;
-  border-left: 25px solid transparent;
-  border-right: 25px solid transparent;
-  border-top: 45px solid #e63946; /* downward pointer */
+  border-left: 20px solid transparent;
+  border-right: 20px solid transparent;
+  border-top: 40px solid #e63946; /* downward triangle */
   position: absolute;
-  top: -45px;
+  top: -40px;
   left: 50%;
   transform: translateX(-50%);
   z-index: 10;
 }
+
+/* Button */
 button {
-  margin-top: 20px;
-  padding: 12px 22px;
+  margin-top: 25px;
+  padding: 12px 25px;
   font-size: 16px;
   font-weight: 600;
   color: white;
@@ -52,21 +86,67 @@ button {
   transition: background 0.2s;
 }
 button:hover { background: #1d3557; }
+
+/* Winner banner */
 #winner {
-  margin-top: 15px;
-  font-size: 20px;
+  position: absolute;
+  left: 50%;
+  bottom: -70px;
+  transform: translateX(-50%) translateY(100%);
+  background: #06d6a0;
+  color: white;
+  padding: 14px 24px;
+  border-radius: 6px;
+  font-size: 18px;
   font-weight: 600;
-  color: #333;
+  opacity: 0;
+  box-shadow: 0 4px 10px rgba(0,0,0,0.15);
+  transition: transform 0.5s ease, opacity 0.5s ease;
 }
+#winner.show {
+  transform: translateX(-50%) translateY(0);
+  opacity: 1;
+}
+
+/* Footer */
+footer {
+  background: #f8f9fa;
+  padding: 15px 20px;
+  font-size: 14px;
+  text-align: center;
+  color: #555;
+  border-top: 1px solid #ddd;
+}
+footer a {
+  color: #457b9d;
+  text-decoration: none;
+  margin: 0 10px;
+}
+footer a:hover { text-decoration: underline; }
 </style>
 </head>
 <body>
-<div id="container">
-  <div id="pointer"></div>
-  <canvas id="wheel" width="600" height="600"></canvas>
-</div>
-<button id="spinBtn">Spin!</button>
-<p id="winner"></p>
+<header>SpinChoice.io</header>
+
+<main>
+  <div id="card">
+    <div id="container">
+      <div id="pointer"></div>
+      <canvas id="wheel" width="600" height="600"></canvas>
+    </div>
+    <button id="spinBtn">Spin!</button>
+    <div id="winner"></div>
+  </div>
+</main>
+
+<footer>
+  <a href="#">About</a> •
+  <a href="#">Contact</a> •
+  <a href="#">Terms</a> •
+  <a href="#">Privacy</a>
+  <br><br>
+  <span>&copy; 2025 SpinChoice.io</span>
+</footer>
 
 <script>
 const sequence = ["Devin","Tommy","Dom","Jimmy","Alex","Tim C","Noah S","Lorcan","Hisham","Tim R","Noah R","Nick"];
@@ -101,7 +181,7 @@ function drawWheel() {
     ctx.beginPath();
     ctx.moveTo(radius,radius);
     ctx.arc(radius,radius,radius,i*sliceAngle,(i+1)*sliceAngle);
-    ctx.fillStyle = i % 2 === 0 ? "#a8dadc" : "#dee2e6"; // alternating flat UI colors
+    ctx.fillStyle = i % 2 === 0 ? "#a8dadc" : "#dee2e6";
     ctx.fill();
     ctx.strokeStyle = "#fff";
     ctx.lineWidth = 2;
@@ -132,14 +212,13 @@ function spinWheel() {
   }
 
   isSpinning = true;
-  winnerEl.textContent = ""; // clear display until spin ends
+  winnerEl.classList.remove("show");
 
   const slices = remaining.length;
   const sliceAngle = 360/slices;
   const winnerName = sequence[spinStep];
   const winnerIndex = remaining.indexOf(winnerName);
 
-  // rotation so winner slice aligns with pointer (top = 270°)
   const stopAngle = 360*5 + (270 - (winnerIndex*sliceAngle + sliceAngle/2));
 
   let start=null;
@@ -155,6 +234,7 @@ function spinWheel() {
       requestAnimationFrame(animate);
     } else {
       winnerEl.textContent = winnerName + " was picked!";
+      winnerEl.classList.add("show");
       lastWinner = winnerName;
       spinStep++;
       isSpinning=false;
