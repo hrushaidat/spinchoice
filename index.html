@@ -1,0 +1,60 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Spin & Decide – Create Your Own Wheel</title>
+<link rel="stylesheet" href="style.css">
+</head>
+<body>
+<header>🎯 Spin & Decide – Create Your Own Wheel</header>
+<main>
+<div id="wheelCard">
+  <div id="container">
+    <div id="pointer"></div>
+    <canvas id="wheel" width="600" height="600"></canvas>
+  </div>
+  <button id="spinBtn">Spin!</button>
+  <p id="winner"></p>
+</div>
+<div id="optionsCard">
+  <h2>Enter Names</h2>
+  <textarea id="namesInput" placeholder="Enter one name per line"></textarea>
+  <div class="fakeOption"><input type="checkbox" checked> Remove name after spin</div>
+  <div class="fakeOption"><input type="checkbox"> Shuffle names each round</div>
+  <div class="fakeOption"><input type="checkbox"> Play sound on spin</div>
+  <div class="fakeOption"><input type="checkbox" id="darkMode"> Dark mode</div>
+  <button id="saveBtn">Save Settings</button>
+  <div id="saveMsg">✅ Settings saved!</div>
+</div>
+</main>
+<footer>
+  <a href="#">About</a> • <a href="#">Contact</a> • <a href="#">Privacy</a> • <a href="#">Terms</a>
+</footer>
+<script src="script.js"></script>
+<script>
+const canvas = document.getElementById("wheel");
+const winnerEl = document.getElementById("winner");
+const spinBtn = document.getElementById("spinBtn");
+let isSpinning = false;
+let spinStep = 0;
+
+function getNames(){ 
+  return document.getElementById("namesInput").value.split("\n").filter(n=>n.trim()!==""); 
+}
+
+function draw(){ drawWheel(canvas,getNames()); }
+
+draw();
+document.getElementById("namesInput").addEventListener("input",draw);
+
+spinBtn.addEventListener("click",()=>{
+  if(isSpinning) return;
+  const names = getNames();
+  if(names.length===0) return alert("Enter at least one name!");
+  isSpinning = true;
+  winnerEl.textContent="";
+  spinWheel(canvas,names,spinStep,winnerEl,()=>{ isSpinning=false; spinStep++; draw(); });
+});
+
+document.getElementById("save
