@@ -5,22 +5,59 @@
 <meta name="viewport" content="width=device-width,initial-scale=1">
 <title>SpinChoice.io</title>
 <style>
-body { font-family:"Segoe UI",sans-serif; display:flex; flex-direction:column; align-items:center; justify-content:center; height:100vh; margin:0; background:linear-gradient(135deg,#74ebd5,#9face6); }
-#container { position:relative; width:90vmin; max-width:500px; }
-canvas { width:100%; height:100%; border-radius:50%; display:block; }
-#pointer { 
-  width:0; height:0; 
-  border-left:25px solid transparent; 
-  border-right:25px solid transparent; 
-  border-top:50px solid #e63946; /* points DOWN */
-  position:absolute; 
-  top:-50px; left:50%; 
-  transform:translateX(-50%); 
-  z-index:10;
+body {
+  font-family: "Segoe UI", sans-serif;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  height: 100vh;
+  margin: 0;
+  background: #f4f6f9;
 }
-button { margin-top:20px; padding:12px 20px; font-size:16px; font-weight:700; color:white; background:#457b9d; border:none; border-radius:8px; cursor:pointer; }
-button:hover { background:#1d3557; }
-#winner { margin-top:15px; font-size:20px; font-weight:700; color:#222; }
+#container {
+  position: relative;
+  width: 90vmin;
+  max-width: 500px;
+}
+canvas {
+  width: 100%;
+  height: 100%;
+  border-radius: 50%;
+  box-shadow: 0 4px 15px rgba(0,0,0,0.2);
+  display: block;
+}
+#pointer {
+  width: 0;
+  height: 0;
+  border-left: 25px solid transparent;
+  border-right: 25px solid transparent;
+  border-top: 45px solid #e63946; /* downward pointer */
+  position: absolute;
+  top: -45px;
+  left: 50%;
+  transform: translateX(-50%);
+  z-index: 10;
+}
+button {
+  margin-top: 20px;
+  padding: 12px 22px;
+  font-size: 16px;
+  font-weight: 600;
+  color: white;
+  background: #457b9d;
+  border: none;
+  border-radius: 6px;
+  cursor: pointer;
+  transition: background 0.2s;
+}
+button:hover { background: #1d3557; }
+#winner {
+  margin-top: 15px;
+  font-size: 20px;
+  font-weight: 600;
+  color: #333;
+}
 </style>
 </head>
 <body>
@@ -33,9 +70,21 @@ button:hover { background:#1d3557; }
 
 <script>
 const sequence = ["Devin","Tommy","Dom","Jimmy","Alex","Tim C","Noah S","Lorcan","Hisham","Tim R","Noah R","Nick"];
-let remaining = [...sequence];
-let spinStep = 0; 
+
+// shuffle helper
+function shuffle(array) {
+  let a = [...array];
+  for (let i=a.length-1; i>0; i--) {
+    const j = Math.floor(Math.random()*(i+1));
+    [a[i],a[j]]=[a[j],a[i]];
+  }
+  return a;
+}
+
+let remaining = shuffle(sequence);
+let spinStep = 0;
 let isSpinning = false;
+let lastWinner = null;
 
 const canvas = document.getElementById("wheel");
 const ctx = canvas.getContext("2d");
@@ -52,18 +101,19 @@ function drawWheel() {
     ctx.beginPath();
     ctx.moveTo(radius,radius);
     ctx.arc(radius,radius,radius,i*sliceAngle,(i+1)*sliceAngle);
-    ctx.fillStyle = `hsl(${i*360/slices},70%,65%)`;
+    ctx.fillStyle = i % 2 === 0 ? "#a8dadc" : "#dee2e6"; // alternating flat UI colors
     ctx.fill();
-    ctx.strokeStyle = "#333";
+    ctx.strokeStyle = "#fff";
+    ctx.lineWidth = 2;
     ctx.stroke();
 
     ctx.save();
     ctx.translate(radius,radius);
     ctx.rotate(i*sliceAngle + sliceAngle/2);
     ctx.textAlign="right";
-    ctx.fillStyle="#111";
-    ctx.font="20px Arial";
-    ctx.fillText(remaining[i], radius-10, 0);
+    ctx.fillStyle="#222";
+    ctx.font="18px Segoe UI";
+    ctx.fillText(remaining[i], radius-12, 5);
     ctx.restore();
   }
 }
@@ -72,15 +122,24 @@ drawWheel();
 
 function spinWheel() {
   if (isSpinning || remaining.length===0) return;
+
+  // remove last winner before new spin
+  if (lastWinner) {
+    const idx = remaining.indexOf(lastWinner);
+    if (idx !== -1) remaining.splice(idx,1);
+    lastWinner = null;
+    drawWheel();
+  }
+
   isSpinning = true;
+  winnerEl.textContent = ""; // clear display until spin ends
 
   const slices = remaining.length;
   const sliceAngle = 360/slices;
-
   const winnerName = sequence[spinStep];
   const winnerIndex = remaining.indexOf(winnerName);
 
-  // target rotation so winner slice is at 270° (top, under pointer)
+  // rotation so winner slice aligns with pointer (top = 270°)
   const stopAngle = 360*5 + (270 - (winnerIndex*sliceAngle + sliceAngle/2));
 
   let start=null;
@@ -95,13 +154,13 @@ function spinWheel() {
     if(progress<1){
       requestAnimationFrame(animate);
     } else {
-      // remove winner after spin
-      remaining.splice(winnerIndex,1);
       winnerEl.textContent = winnerName + " was picked!";
+      lastWinner = winnerName;
       spinStep++;
-      drawWheel();
       isSpinning=false;
-      if(remaining.length===0) spinBtn.disabled=true;
+      if(remaining.length===1 && spinStep>=sequence.length) {
+        spinBtn.disabled=true;
+      }
     }
   }
   requestAnimationFrame(animate);
