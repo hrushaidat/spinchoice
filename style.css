@@ -1,0 +1,127 @@
+:root {
+  --bg: #f8f9fa;
+  --card: #fff;
+  --text: #222;
+  --primary: #2a9d8f;
+  --secondary: #457b9d;
+  --highlight: #e63946;
+}
+body.dark {
+  --bg: #1e1e1e;
+  --card: #2c2c2c;
+  --text: #f1f1f1;
+  --primary: #06d6a0;
+  --secondary: #118ab2;
+  --highlight: #ef476f;
+}
+
+body {
+  margin: 0;
+  font-family: "Segoe UI", sans-serif;
+  background: var(--bg);
+  display: flex;
+  flex-direction: column;
+  min-height: 100vh;
+  color: var(--text);
+  transition: background 0.3s, color 0.3s;
+}
+
+header {
+  background: #264653;
+  color: white;
+  padding: 25px;
+  font-size: 26px;
+  font-weight: 700;
+  text-align: center;
+  box-shadow: 0 2px 5px rgba(0,0,0,0.15);
+  transition: background 0.3s;
+}
+body.dark header { background: #111; }
+
+main {
+  flex: 1;
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  padding: 30px;
+  gap: 25px;
+}
+
+#wheelCard, #optionsCard {
+  background: var(--card);
+  border-radius: 12px;
+  padding: 25px;
+  box-shadow: 0 6px 20px rgba(0,0,0,0.12);
+  flex: 1;
+  min-width: 280px;
+  max-width: 550px;
+  transition: background 0.3s;
+  text-align: center;
+}
+
+#container {
+  position: relative;
+  margin: 0 auto;
+}
+
+canvas { width: 100%; height: 100%; border-radius: 50%; display: block; }
+
+#pointer {
+  width: 0; height: 0;
+  border-left: 20px solid transparent;
+  border-right: 20px solid transparent;
+  border-top: 40px solid var(--highlight);
+  position: absolute; top: -40px; left: 50%;
+  transform: translateX(-50%); z-index: 10;
+}
+
+button {
+  margin-top: 20px; padding: 12px 25px;
+  font-size: 16px; font-weight: 600;
+  color: white; background: var(--primary);
+  border: none; border-radius: 6px;
+  cursor: pointer; transition: background 0.2s, transform 0.1s;
+}
+button:hover { background: #21867a; }
+button:active { transform: scale(0.96); }
+
+#winner {
+  margin-top: 20px;
+  font-size: 20px;
+  font-weight: 600;
+  background: #f1faee;
+  border: 1px solid #a8dadc;
+  border-radius: 6px;
+  padding: 10px;
+  display: inline-block;
+  color: #333;
+}
+body.dark #winner { background: #333; border: 1px solid #666; color: #f1f1f1; }
+
+textarea {
+  width: 100%; min-height: 150px; border: 1px solid #ddd;
+  border-radius: 6px; padding: 10px; font-size: 14px;
+  resize: none; margin-bottom: 20px; background: var(--bg);
+  color: var(--text);
+}
+
+.fakeOption { display: flex; align-items: center; margin-bottom: 12px; font-size: 14px; }
+.fakeOption input { margin-right: 10px; }
+
+#saveBtn { margin-top: 10px; width: 100%; padding: 10px; font-weight: 600;
+  border: none; border-radius: 6px; background: var(--secondary);
+  color: white; cursor: pointer; transition: background 0.2s;
+}
+#saveBtn:hover { background: #1d3557; }
+
+#saveMsg { margin-top: 10px; font-size: 13px; color: var(--primary);
+  font-weight: 600; display: none; }
+
+footer {
+  background: #f8f9fa; color: #555; font-size: 14px;
+  text-align: center; padding: 15px; border-top: 1px solid #ddd;
+  transition: background 0.3s, color 0.3s;
+}
+footer a { color: var(--secondary); text-decoration: none; margin: 0 8px; }
+footer a:hover { text-decoration: underline; }
+body.dark footer { background: #111; color: #aaa; }
