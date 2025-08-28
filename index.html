@@ -175,14 +175,16 @@ Diana</textarea>
 </footer>
 
 <script>
-let names = [];
+<script>
 let isSpinning = false;
-
+let names = [];
 const canvas = document.getElementById("wheel");
 const ctx = canvas.getContext("2d");
 const spinBtn = document.getElementById("spinBtn");
 const winnerEl = document.getElementById("winner");
 const namesBox = document.getElementById("namesBox");
+
+let lastWinnerName = null; // stores the previous winner;
 
 // Read names from textarea
 function getNames() {
