@@ -1,109 +1,355 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8">
-  <title>SpinChoice – Pre-Set Wheel</title>
-  <link rel="stylesheet" href="style.css">
-  <style>
-    #wheelContainer {
-      position: relative;
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-    }
-  </style>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Spin & Decide – Random Name Picker Tool</title>
+<style>
+:root {
+  --bg: #f8f9fa;
+  --card: #fff;
+  --text: #222;
+  --primary: #2a9d8f;
+  --secondary: #457b9d;
+  --highlight: #e63946;
+}
+body.dark {
+  --bg: #1e1e1e;
+  --card: #2c2c2c;
+  --text: #f1f1f1;
+  --primary: #06d6a0;
+  --secondary: #118ab2;
+  --highlight: #ef476f;
+}
+
+body {
+  margin: 0;
+  font-family: "Segoe UI", sans-serif;
+  background: var(--bg);
+  display: flex;
+  flex-direction: column;
+  min-height: 100vh;
+  color: var(--text);
+  transition: background 0.3s, color 0.3s;
+}
+
+/* Header */
+header {
+  background: #264653;
+  color: white;
+  padding: 25px;
+  font-size: 26px;
+  font-weight: 700;
+  text-align: center;
+  box-shadow: 0 2px 5px rgba(0,0,0,0.15);
+  transition: background 0.3s;
+}
+body.dark header { background: #111; }
+
+/* Main Layout */
+main {
+  flex: 1;
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  padding: 30px;
+  gap: 25px;
+}
+
+/* Wheel Card */
+#wheelCard {
+  background: var(--card);
+  border-radius: 12px;
+  padding: 20px 25px 40px;
+  box-shadow: 0 6px 20px rgba(0,0,0,0.12);
+  text-align: center;
+  flex: 1;
+  min-width: 340px;
+  max-width: 550px;
+  transition: background 0.3s;
+}
+#container {
+  position: relative;
+  margin: 0 auto;
+}
+canvas {
+  width: 100%;
+  height: 100%;
+  border-radius: 50%;
+  display: block;
+}
+#pointer {
+  width: 0;
+  height: 0;
+  border-left: 20px solid transparent;
+  border-right: 20px solid transparent;
+  border-top: 40px solid var(--highlight);
+  position: absolute;
+  top: -40px;
+  left: 50%;
+  transform: translateX(-50%);
+  z-index: 10;
+}
+button {
+  margin-top: 20px;
+  padding: 12px 25px;
+  font-size: 16px;
+  font-weight: 600;
+  color: white;
+  background: var(--primary);
+  border: none;
+  border-radius: 6px;
+  cursor: pointer;
+  transition: background 0.2s, transform 0.1s;
+}
+button:hover { background: #21867a; }
+button:active { transform: scale(0.96); }
+
+#winner {
+  margin-top: 20px;
+  font-size: 20px;
+  font-weight: 600;
+  background: #f1faee;
+  border: 1px solid #a8dadc;
+  border-radius: 6px;
+  padding: 10px;
+  display: inline-block;
+  color: #333;
+}
+body.dark #winner {
+  background: #333;
+  border: 1px solid #666;
+  color: #f1f1f1;
+}
+
+/* Sidebar fake options */
+#optionsCard {
+  background: var(--card);
+  border-radius: 12px;
+  padding: 25px 20px;
+  box-shadow: 0 6px 20px rgba(0,0,0,0.12);
+  flex: 1;
+  min-width: 280px;
+  max-width: 350px;
+  transition: background 0.3s;
+}
+#optionsCard h2 {
+  font-size: 20px;
+  margin-bottom: 15px;
+  border-bottom: 2px solid #eee;
+  padding-bottom: 8px;
+}
+textarea {
+  width: 100%;
+  min-height: 150px;
+  border: 1px solid #ddd;
+  border-radius: 6px;
+  padding: 10px;
+  font-size: 14px;
+  resize: none;
+  margin-bottom: 20px;
+  background: var(--bg);
+  color: var(--text);
+}
+.fakeOption {
+  display: flex;
+  align-items: center;
+  margin-bottom: 12px;
+  font-size: 14px;
+}
+.fakeOption input { margin-right: 10px; }
+#saveBtn {
+  margin-top: 10px;
+  width: 100%;
+  padding: 10px;
+  font-weight: 600;
+  border: none;
+  border-radius: 6px;
+  background: var(--secondary);
+  color: white;
+  cursor: pointer;
+  transition: background 0.2s;
+}
+#saveBtn:hover { background: #1d3557; }
+
+/* Save message */
+#saveMsg {
+  margin-top: 10px;
+  font-size: 13px;
+  color: var(--primary);
+  font-weight: 600;
+  display: none;
+}
+
+/* Footer */
+footer {
+  background: #f8f9fa;
+  color: #555;
+  font-size: 14px;
+  text-align: center;
+  padding: 15px;
+  border-top: 1px solid #ddd;
+  transition: background 0.3s, color 0.3s;
+}
+footer a {
+  color: var(--secondary);
+  text-decoration: none;
+  margin: 0 8px;
+}
+footer a:hover { text-decoration: underline; }
+body.dark footer { background: #111; color: #aaa; }
+</style>
 </head>
 <body>
-  <header>SpinChoice – Name Picker</header>
-  <main>
-    <div class="container">
-      <h2>Pre-Set Wheel</h2>
-      <div id="wheelContainer">
-        <div id="arrow"></div>
-        <canvas id="wheel" width="400" height="400"></canvas>
-      </div>
-      <button id="spin">Spin</button>
-      <div id="winner"></div>
+<header>🎯 Spin & Decide – Random Name Picker Tool</header>
+
+<main>
+  <!-- Wheel Card -->
+  <div id="wheelCard">
+    <div id="container">
+      <div id="pointer"></div>
+      <canvas id="wheel" width="600" height="600"></canvas>
     </div>
-  </main>
+    <button id="spinBtn">Spin!</button>
+    <p id="winner"></p>
+  </div>
 
-  <script>
-    const canvas = document.getElementById("wheel");
-    const ctx = canvas.getContext("2d");
-    const arrow = document.getElementById("arrow");
-    const winnerDisplay = document.getElementById("winner");
-    const spinButton = document.getElementById("spin");
+  <!-- Options Card -->
+  <div id="optionsCard">
+    <h2>Participants</h2>
+    <textarea readonly>
+Devin
+Tommy
+Dom
+Jimmy
+Alex
+Tim C
+Noah S
+Lorcan
+Hisham
+Tim R
+Noah R
+Nick
+    </textarea>
 
-    // Pre-set order
-    const spinOrder = ["Devin","Tommy","Dom","Jimmy","Alex","Tim C","Noah S","Lorcan","Hisham","Tim R","Noah R","Nick"];
-    let currentSpin = 0;
+    <h2>Wheel Settings</h2>
+    <div class="fakeOption"><input type="checkbox" checked> Remove name after spin</div>
+    <div class="fakeOption"><input type="checkbox"> Play sound on spin</div>
+    <div class="fakeOption"><input type="checkbox"> Shuffle names each round</div>
+    <div class="fakeOption"><input type="checkbox" id="darkMode"> Dark mode</div>
+    <button id="saveBtn">Save Settings</button>
+    <div id="saveMsg">✅ Settings saved!</div>
+  </div>
+</main>
 
-    // Shuffle display order for realism
-    let displayNames = [...spinOrder].sort(() => Math.random() - 0.5);
+<footer>
+  <a href="#">About</a> • 
+  <a href="#">Contact</a> • 
+  <a href="#">Privacy</a> • 
+  <a href="#">Terms</a>
+</footer>
 
-    const size = canvas.width;
-    const radius = size / 2;
-    let rotation = 0;
+<script>
+const sequence = ["Devin","Tommy","Dom","Jimmy","Alex","Tim C","Noah S","Lorcan","Hisham","Tim R","Noah R","Nick"];
+let remaining = [...sequence];
+let spinStep = 0;
+let isSpinning = false;
+let lastWinner = null;
 
-    function drawWheel(names) {
-      const sliceAngle = (2 * Math.PI) / names.length;
-      ctx.clearRect(0,0,size,size);
-      names.forEach((name, i) => {
-        const angle = i * sliceAngle + rotation;
-        ctx.beginPath();
-        ctx.moveTo(radius, radius);
-        ctx.arc(radius, radius, radius, angle, angle + sliceAngle);
-        ctx.closePath();
-        ctx.fillStyle = i % 2 === 0 ? "#f1f3f6" : "#dfe6ee";
-        ctx.fill();
-        ctx.save();
-        ctx.translate(radius, radius);
-        ctx.rotate(angle + sliceAngle / 2);
-        ctx.fillStyle = "#333";
-        ctx.font = "16px Segoe UI";
-        ctx.textAlign = "right";
-        ctx.fillText(name, radius - 10, 5);
-        ctx.restore();
-      });
-    }
+const canvas = document.getElementById("wheel");
+const ctx = canvas.getContext("2d");
+const spinBtn = document.getElementById("spinBtn");
+const winnerEl = document.getElementById("winner");
 
-    function spinWheel() {
-      if (currentSpin >= spinOrder.length) {
-        winnerDisplay.textContent = "All names have been chosen!";
-        return;
-      }
-      const winner = spinOrder[currentSpin];
-      const winnerIndex = displayNames.indexOf(winner);
-      const sliceAngle = (2 * Math.PI) / displayNames.length;
-      const targetAngle = (3 * Math.PI/2) - (winnerIndex * sliceAngle + sliceAngle/2);
-      const spins = 5;
-      const finalRotation = spins * 2 * Math.PI + targetAngle;
+function drawWheel() {
+  const size = canvas.width;
+  const radius = size/2;
+  const slices = remaining.length;
+  const sliceAngle = 2*Math.PI/slices;
+  ctx.clearRect(0,0,size,size);
+  for (let i=0;i<slices;i++) {
+    ctx.beginPath();
+    ctx.moveTo(radius,radius);
+    ctx.arc(radius,radius,radius,i*sliceAngle,(i+1)*sliceAngle);
+    ctx.fillStyle = i % 2 === 0 ? "#a8dadc" : "#dee2e6";
+    ctx.fill();
+    ctx.strokeStyle = "#fff";
+    ctx.lineWidth = 2;
+    ctx.stroke();
 
-      let start = null;
-      function animate(time) {
-        if (!start) start = time;
-        const progress = (time - start) / 3000;
-        if (progress < 1) {
-          rotation = finalRotation * easeOut(progress);
-          drawWheel(displayNames);
-          requestAnimationFrame(animate);
-        } else {
-          rotation = finalRotation;
-          drawWheel(displayNames);
-          winnerDisplay.textContent = "Winner: " + winner;
-          displayNames.splice(winnerIndex,1);
-          currentSpin++;
-        }
-      }
+    ctx.save();
+    ctx.translate(radius,radius);
+    ctx.rotate(i*sliceAngle + sliceAngle/2);
+    ctx.textAlign="right";
+    ctx.fillStyle="#222";
+    ctx.font="18px Segoe UI";
+    ctx.fillText(remaining[i], radius-15, 5);
+    ctx.restore();
+  }
+}
+
+drawWheel();
+
+function spinWheel() {
+  if (isSpinning || remaining.length===0) return;
+
+  if (lastWinner) {
+    const idx = remaining.indexOf(lastWinner);
+    if (idx !== -1) remaining.splice(idx,1);
+    lastWinner = null;
+    drawWheel();
+  }
+
+  isSpinning = true;
+  winnerEl.textContent = "";
+
+  const slices = remaining.length;
+  const sliceAngle = 360/slices;
+  const winnerName = sequence[spinStep];
+  const winnerIndex = remaining.indexOf(winnerName);
+  const stopAngle = 360*5 + (270 - (winnerIndex*sliceAngle + sliceAngle/2));
+
+  let start=null;
+  const duration = 4500;
+  function animate(timestamp){
+    if(!start) start=timestamp;
+    const progress = Math.min((timestamp-start)/duration,1);
+    const eased = 1-Math.pow(1-progress,3);
+    const angle = stopAngle*eased;
+    canvas.style.transform = `rotate(${angle}deg)`;
+
+    if(progress<1){
       requestAnimationFrame(animate);
+    } else {
+      winnerEl.textContent = "🎉 " + winnerName + " was picked!";
+      lastWinner = winnerName;
+      spinStep++;
+      isSpinning=false;
+      if(remaining.length===1 && spinStep>=sequence.length) {
+        spinBtn.disabled=true;
+      }
     }
+  }
+  requestAnimationFrame(animate);
+}
 
-    function easeOut(t) {
-      return 1 - Math.pow(1 - t, 3);
-    }
+spinBtn.addEventListener("click",spinWheel);
 
-    drawWheel(displayNames);
-    spinButton.addEventListener("click", spinWheel);
-  </script>
+/* Fake save settings */
+document.getElementById("saveBtn").addEventListener("click",()=>{
+  const msg=document.getElementById("saveMsg");
+  msg.style.display="block";
+  setTimeout(()=>{msg.style.display="none";},2000);
+});
+
+/* Dark mode toggle */
+document.getElementById("darkMode").addEventListener("change",(e)=>{
+  if(e.target.checked){
+    document.body.classList.add("dark");
+  } else {
+    document.body.classList.remove("dark");
+  }
+});
+</script>
 </body>
 </html>
