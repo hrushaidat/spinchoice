@@ -269,13 +269,12 @@ function spinWheel() {
     canvas.style.transform = `rotate(${angle}deg)`;
 
     if (progress < 1) {
-      requestAnimationFrame(animate);
-    } else {
-      const winner = names[winnerIndex];
-      winnerEl.textContent = "🎉 " + winner + " was picked!";
-      lastWinnerName = winner;     // will be removed at the START of the next spin
-      isSpinning = false;
-    }
+  requestAnimationFrame(animate);
+} else {
+  const winner = names[winnerIndex];
+  winnerEl.textContent = "🎉 " + winner + " was picked!";
+  lastWinnerName = winner;   // remove at the START of the next spin
+  isSpinning = false;
   }
 
   requestAnimationFrame(animate);
