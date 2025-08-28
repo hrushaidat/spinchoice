@@ -223,9 +223,21 @@ function drawWheel(list) {
 }
 
 function spinWheel() {
+  // 🔹 If there was a previous winner, remove them NOW before this spin
+  if (lastWinnerName) {
+    names = getNames();
+    const idx = names.indexOf(lastWinnerName);
+    if (idx !== -1) {
+      names.splice(idx, 1);
+      namesBox.value = names.join("\n");
+      drawWheel(names);
+    }
+    lastWinnerName = null; // reset
+  }
+
   names = getNames();
-  if (isSpinning || names.length===0) {
-    if (names.length===0) alert("Please enter at least one name on the left.");
+  if (isSpinning || names.length==0) {
+    if (names.length===0) alert("Please enter at least one name.");
     return;
   }
   isSpinning = true;
@@ -253,7 +265,8 @@ function spinWheel() {
     } else {
   // show winner AFTER the spin ends
   const winner = names[winnerIndex];
-  winnerEl.textContent = "🎉 " + winner + " was picked!";
+winnerEl.textContent = "🎉 " + winner + " was picked!";
+lastWinnerName = winner;   // will be removed at the start of the next spin;
 
   // ALWAYS remove winner from both the array and the textarea
   names.splice(winnerIndex, 1);                  // update in-memory list
