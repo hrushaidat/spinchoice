@@ -1,60 +1,208 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width,initial-scale=1">
-<title>Spin & Decide – Create Your Own Wheel</title>
-<link rel="stylesheet" href="style.css">
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>SpinChoice - Name Picker</title>
+  <link rel="stylesheet" href="style.css">
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      background: #f4f6f9;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: flex-start;
+      height: 100vh;
+      margin: 0;
+      padding: 20px;
+    }
+
+    header {
+      text-align: center;
+      margin-bottom: 20px;
+    }
+
+    h1 {
+      font-size: 2rem;
+      color: #333;
+    }
+
+    .container {
+      display: flex;
+      gap: 40px;
+      align-items: flex-start;
+      justify-content: center;
+      width: 100%;
+      max-width: 1100px;
+    }
+
+    .form-box {
+      background: white;
+      padding: 20px;
+      border-radius: 12px;
+      box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+      width: 300px;
+    }
+
+    .form-box h2 {
+      margin-top: 0;
+      font-size: 1.2rem;
+      color: #444;
+    }
+
+    textarea {
+      width: 100%;
+      height: 200px;
+      margin: 10px 0;
+      padding: 10px;
+      border-radius: 8px;
+      border: 1px solid #ccc;
+      resize: none;
+    }
+
+    button {
+      background: #007BFF;
+      color: white;
+      padding: 10px 16px;
+      border: none;
+      border-radius: 8px;
+      cursor: pointer;
+      font-size: 1rem;
+    }
+
+    button:hover {
+      background: #0056b3;
+    }
+
+    canvas {
+      border-radius: 50%;
+      box-shadow: 0 4px 12px rgba(0,0,0,0.2);
+    }
+
+    .arrow {
+      width: 0;
+      height: 0;
+      border-left: 20px solid transparent;
+      border-right: 20px solid transparent;
+      border-top: 30px solid red;
+      position: absolute;
+      top: 160px;
+      left: 50%;
+      transform: translateX(-50%);
+      z-index: 10;
+    }
+
+    .winner {
+      margin-top: 20px;
+      font-size: 1.4rem;
+      font-weight: bold;
+      color: #222;
+      min-height: 30px;
+    }
+  </style>
 </head>
 <body>
-<header>🎯 Spin & Decide – Create Your Own Wheel</header>
-<main>
-<div id="wheelCard">
-  <div id="container">
-    <div id="pointer"></div>
-    <canvas id="wheel" width="600" height="600"></canvas>
+  <header>
+    <h1>SpinChoice - Random Name Picker</h1>
+    <p>Enter names, customize your wheel, and spin to decide!</p>
+  </header>
+
+  <div class="container">
+    <!-- Left: Fake entry box -->
+    <div class="form-box">
+      <h2>Enter Names</h2>
+      <textarea id="namesInput" placeholder="Enter one name per line"></textarea>
+      <button onclick="updateWheel()">Update Wheel</button>
+    </div>
+
+    <!-- Right: Wheel -->
+    <div style="position: relative;">
+      <div class="arrow"></div>
+      <canvas id="wheel" width="400" height="400"></canvas>
+      <div class="winner" id="winner"></div>
+      <button onclick="spin()">Spin</button>
+    </div>
   </div>
-  <button id="spinBtn">Spin!</button>
-  <p id="winner"></p>
-</div>
-<div id="optionsCard">
-  <h2>Enter Names</h2>
-  <textarea id="namesInput" placeholder="Enter one name per line"></textarea>
-  <div class="fakeOption"><input type="checkbox" checked> Remove name after spin</div>
-  <div class="fakeOption"><input type="checkbox"> Shuffle names each round</div>
-  <div class="fakeOption"><input type="checkbox"> Play sound on spin</div>
-  <div class="fakeOption"><input type="checkbox" id="darkMode"> Dark mode</div>
-  <button id="saveBtn">Save Settings</button>
-  <div id="saveMsg">✅ Settings saved!</div>
-</div>
-</main>
-<footer>
-  <a href="#">About</a> • <a href="#">Contact</a> • <a href="#">Privacy</a> • <a href="#">Terms</a>
-</footer>
-<script src="script.js"></script>
-<script>
-const canvas = document.getElementById("wheel");
-const winnerEl = document.getElementById("winner");
-const spinBtn = document.getElementById("spinBtn");
-let isSpinning = false;
-let spinStep = 0;
 
-function getNames(){ 
-  return document.getElementById("namesInput").value.split("\n").filter(n=>n.trim()!==""); 
-}
+  <script>
+    let names = ["Alice", "Bob", "Charlie", "Diana"]; // starter example names
+    let startAngle = 0;
+    let arc = Math.PI / (names.length / 2);
+    let spinTimeout = null;
+    let spinAngle = 0;
+    let spinAngleIncrement = 0;
+    let spinning = false;
 
-function draw(){ drawWheel(canvas,getNames()); }
+    const canvas = document.getElementById("wheel");
+    const ctx = canvas.getContext("2d");
 
-draw();
-document.getElementById("namesInput").addEventListener("input",draw);
+    function drawWheel() {
+      const outsideRadius = 180;
+      const textRadius = 140;
+      const insideRadius = 20;
 
-spinBtn.addEventListener("click",()=>{
-  if(isSpinning) return;
-  const names = getNames();
-  if(names.length===0) return alert("Enter at least one name!");
-  isSpinning = true;
-  winnerEl.textContent="";
-  spinWheel(canvas,names,spinStep,winnerEl,()=>{ isSpinning=false; spinStep++; draw(); });
-});
+      ctx.clearRect(0,0,canvas.width,canvas.height);
 
-document.getElementById("save
+      arc = Math.PI / (names.length / 2);
+
+      for(let i = 0; i < names.length; i++) {
+        const angle = startAngle + i * arc;
+        ctx.fillStyle = i % 2 === 0 ? "#4e79a7" : "#f28e2b";
+        
+        ctx.beginPath();
+        ctx.arc(200, 200, outsideRadius, angle, angle + arc, false);
+        ctx.arc(200, 200, insideRadius, angle + arc, angle, true);
+        ctx.fill();
+        ctx.save();
+
+        ctx.fillStyle = "white";
+        ctx.translate(200 + Math.cos(angle + arc/2) * textRadius,
+                      200 + Math.sin(angle + arc/2) * textRadius);
+        ctx.rotate(angle + arc/2 + Math.PI/2);
+        ctx.fillText(names[i], -ctx.measureText(names[i]).width/2, 0);
+        ctx.restore();
+      }
+    }
+
+    function rotateWheel() {
+      spinAngle *= 0.97;
+      if(spinAngle < 0.2) {
+        clearTimeout(spinTimeout);
+        spinning = false;
+
+        const degrees = startAngle * 180 / Math.PI + 90;
+        const arcd = arc * 180 / Math.PI;
+        const index = Math.floor((360 - (degrees % 360)) / arcd) % names.length;
+
+        document.getElementById("winner").textContent = "Winner: " + names[index];
+        return;
+      }
+      startAngle += (spinAngle * Math.PI / 180);
+      drawWheel();
+      spinTimeout = setTimeout(rotateWheel, 30);
+    }
+
+    function spin() {
+      if(spinning || names.length === 0) return;
+      document.getElementById("winner").textContent = "";
+      spinning = true;
+      spinAngle = Math.random() * 10 + 20;
+      rotateWheel();
+    }
+
+    function updateWheel() {
+      const input = document.getElementById("namesInput").value.trim();
+      if(input.length > 0) {
+        names = input.split("\n").map(n => n.trim()).filter(n => n !== "");
+      } else {
+        names = [];
+      }
+      startAngle = 0;
+      drawWheel();
+    }
+
+    drawWheel();
+  </script>
+</body>
+</html>
