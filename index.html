@@ -2,169 +2,140 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Wheel Decider - Spin to Choose</title>
+  <title>SpinChoice – Random Name Picker</title>
   <link rel="stylesheet" href="style.css">
   <style>
-    body {
-      font-family: 'Segoe UI', Tahoma, sans-serif;
-      background: #f4f6f9;
-      margin: 0;
-      padding: 0;
-      text-align: center;
-      color: #333;
+    #wheelContainer {
+      position: relative;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
     }
-    header {
-      background: #4a90e2;
-      padding: 20px;
-      color: white;
-      font-size: 24px;
-      font-weight: bold;
-    }
-    .container {
-      max-width: 800px;
-      margin: 30px auto;
-      padding: 20px;
-      background: white;
-      border-radius: 10px;
-      box-shadow: 0 2px 6px rgba(0,0,0,0.1);
-    }
-    textarea {
+    #inputBox {
       width: 100%;
       height: 100px;
-      padding: 10px;
-      border-radius: 5px;
+      font-family: Segoe UI, sans-serif;
+      font-size: 14px;
+      padding: 8px;
+      margin-bottom: 10px;
       border: 1px solid #ccc;
-      font-size: 16px;
+      border-radius: 6px;
       resize: vertical;
     }
-    button {
-      margin-top: 15px;
-      padding: 10px 20px;
-      font-size: 16px;
-      border: none;
-      border-radius: 5px;
-      background: #4a90e2;
-      color: white;
-      cursor: pointer;
-      transition: background 0.2s;
+    .options {
+      margin: 10px 0;
+      font-size: 14px;
+      color: #444;
     }
-    button:hover {
-      background: #357abd;
-    }
-    #wheelCanvas {
-      margin-top: 30px;
-    }
-    #pointer {
-      position: relative;
-      margin: 20px auto;
-      width: 0; 
-      height: 0; 
-      border-left: 20px solid transparent;
-      border-right: 20px solid transparent;
-      border-bottom: 30px solid #e74c3c;
-    }
-    #winnerBox {
-      margin-top: 20px;
-      font-size: 20px;
-      font-weight: bold;
-      color: #2c3e50;
+    .options label {
+      margin-right: 10px;
     }
   </style>
 </head>
 <body>
-  <header>Wheel Decider - Spin to Pick a Name</header>
-  
-  <div class="container">
-    <h2>Enter Names</h2>
-    <p>Type names separated by commas or line breaks, then click "Create Wheel".</p>
-    <textarea id="nameInput" placeholder="e.g. Alice, Bob, Charlie"></textarea><br>
-    <button onclick="createWheel()">Create Wheel</button>
-    
-    <div id="wheelArea" style="display:none;">
-      <div id="pointer"></div>
-      <canvas id="wheelCanvas" width="500" height="500"></canvas><br>
-      <button onclick="spin()">Spin</button>
-      <div id="winnerBox"></div>
+  <header>SpinChoice – Spin. Decide. Pick Names.</header>
+  <main>
+    <div class="container">
+      <h2>Create Your Wheel</h2>
+      <textarea id="inputBox" placeholder="Enter names here, one per line..."></textarea>
+      
+      <div class="options">
+        <label><input type="checkbox"> Shuffle names</label>
+        <label><input type="checkbox"> Remove winner after spin</label>
+        <label><input type="checkbox"> Allow duplicates</label>
+      </div>
+
+      <div id="wheelContainer">
+        <div id="arrow"></div>
+        <canvas id="wheel" width="400" height="400"></canvas>
+      </div>
+      
+      <button id="spin">Spin</button>
+      <div id="winner"></div>
     </div>
-  </div>
+  </main>
 
   <script>
-    let names = [];
-    let startAngle = 0;
-    let arc = 0;
-    let spinTimeout = null;
-    let spinAngleStart = 0;
-    let spinTime = 0;
-    let spinTimeTotal = 0;
-
-    const canvas = document.getElementById("wheelCanvas");
+    const canvas = document.getElementById("wheel");
     const ctx = canvas.getContext("2d");
+    const arrow = document.getElementById("arrow");
+    const winnerDisplay = document.getElementById("winner");
+    const spinButton = document.getElementById("spin");
+    const inputBox = document.getElementById("inputBox");
 
-    function createWheel() {
-      const input = document.getElementById("nameInput").value.trim();
-      if (!input) {
-        alert("Please enter at least one name.");
-        return;
-      }
-      names = input.split(/[\n,]+/).map(n => n.trim()).filter(n => n);
-      arc = Math.PI * 2 / names.length;
-      document.getElementById("wheelArea").style.display = "block";
-      drawWheel();
-    }
+    let names = ["Alice","Bob","Charlie","David"]; // default demo names
+    let rotation = 0;
 
     function drawWheel() {
-      ctx.clearRect(0,0,500,500);
-      for (let i = 0; i < names.length; i++) {
-        const angle = startAngle + i * arc;
-        ctx.fillStyle = i % 2 === 0 ? "#4a90e2" : "#50c878"; // alternating colors
+      if (names.length === 0) return;
+      const sliceAngle = (2 * Math.PI) / names.length;
+      ctx.clearRect(0,0,canvas.width,canvas.height);
+      names.forEach((name,i) => {
+        const angle = i * sliceAngle + rotation;
         ctx.beginPath();
-        ctx.moveTo(250, 250);
-        ctx.arc(250, 250, 200, angle, angle + arc, false);
-        ctx.lineTo(250, 250);
+        ctx.moveTo(canvas.width/2, canvas.height/2);
+        ctx.arc(canvas.width/2, canvas.height/2, canvas.width/2, angle, angle+sliceAngle);
+        ctx.closePath();
+        ctx.fillStyle = i % 2 === 0 ? "#f1f3f6" : "#dfe6ee";
         ctx.fill();
         ctx.save();
-        ctx.fillStyle = "white";
-        ctx.translate(250 + Math.cos(angle + arc/2) * 150,
-                      250 + Math.sin(angle + arc/2) * 150);
-        ctx.rotate(angle + arc/2);
-        ctx.fillText(names[i], -ctx.measureText(names[i]).width/2, 0);
+        ctx.translate(canvas.width/2, canvas.height/2);
+        ctx.rotate(angle + sliceAngle/2);
+        ctx.fillStyle = "#333";
+        ctx.font = "16px Segoe UI";
+        ctx.textAlign = "right";
+        ctx.fillText(name, canvas.width/2 - 10, 5);
         ctx.restore();
-      }
+      });
     }
 
-    function spin() {
-      spinAngleStart = Math.random() * 10 + 10;
-      spinTime = 0;
-      spinTimeTotal = Math.random() * 3000 + 4000;
-      rotateWheel();
-    }
-
-    function rotateWheel() {
-      spinTime += 30;
-      if (spinTime >= spinTimeTotal) {
-        stopRotateWheel();
+    function spinWheel() {
+      if (names.length === 0) {
+        winnerDisplay.textContent = "Please enter at least one name.";
         return;
       }
-      const spinAngle = spinAngleStart - easeOut(spinTime, 0, spinAngleStart, spinTimeTotal);
-      startAngle += (spinAngle * Math.PI / 180);
+      const winnerIndex = Math.floor(Math.random() * names.length);
+      const sliceAngle = (2 * Math.PI) / names.length;
+      const targetAngle = (3 * Math.PI/2) - (winnerIndex * sliceAngle + sliceAngle/2);
+      const spins = 5;
+      const finalRotation = spins * 2 * Math.PI + targetAngle;
+
+      let start = null;
+      function animate(time) {
+        if (!start) start = time;
+        const progress = (time - start) / 3000;
+        if (progress < 1) {
+          rotation = finalRotation * easeOut(progress);
+          drawWheel();
+          requestAnimationFrame(animate);
+        } else {
+          rotation = finalRotation;
+          drawWheel();
+          winnerDisplay.textContent = "Winner: " + names[winnerIndex];
+        }
+      }
+      requestAnimationFrame(animate);
+    }
+
+    function easeOut(t) {
+      return 1 - Math.pow(1 - t, 3);
+    }
+
+    inputBox.addEventListener("input", () => {
+      const inputNames = inputBox.value
+        .split("\n")
+        .map(n => n.trim())
+        .filter(n => n);
+      if (inputNames.length > 0) {
+        names = inputNames;
+      } else {
+        names = ["Alice","Bob","Charlie","David"];
+      }
       drawWheel();
-      spinTimeout = setTimeout(rotateWheel, 30);
-    }
+    });
 
-    function stopRotateWheel() {
-      clearTimeout(spinTimeout);
-      const degrees = startAngle * 180 / Math.PI + 90;
-      const arcd = arc * 180 / Math.PI;
-      const index = Math.floor((360 - (degrees % 360)) / arcd) % names.length;
-      document.getElementById("winnerBox").innerText = "Winner: " + names[index];
-    }
-
-    function easeOut(t, b, c, d) {
-      const ts = (t/=d)*t;
-      const tc = ts*t;
-      return b+c*(tc + -3*ts + 3*t);
-    }
+    drawWheel();
+    spinButton.addEventListener("click", spinWheel);
   </script>
 </body>
 </html>
