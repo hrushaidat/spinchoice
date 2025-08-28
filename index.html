@@ -4,195 +4,100 @@
   <meta charset="UTF-8">
   <title>SpinChoice – Name Picker</title>
   <link rel="stylesheet" href="style.css">
-  <style>
-    /* Match wheel.html layout */
-    #wheelContainer { position: relative; display: flex; flex-direction: column; align-items: center; }
-
-    /* Hidden editor overlay (only shows when you press E or use ?edit=1) */
-    #editor[hidden] { display: none; }
-    #editor {
-      position: fixed; inset: 0; background: rgba(0,0,0,0.45);
-      display: flex; align-items: center; justify-content: center; z-index: 9999;
-    }
-    #editor .panel {
-      width: 90%; max-width: 420px; background: #fff; color:#222;
-      border-radius: 10px; box-shadow: 0 10px 30px rgba(0,0,0,0.25);
-      padding: 18px;
-      font-family: "Segoe UI", Tahoma, sans-serif;
-    }
-    #editor h3 { margin: 0 0 8px; font-size: 18px; }
-    #editor textarea {
-      width: 100%; min-height: 150px; border: 1px solid #ccc; border-radius: 8px;
-      padding: 10px; resize: vertical; font-size: 14px; font-family: inherit;
-    }
-    #editor .row { display: flex; gap: 8px; margin-top: 10px; }
-    #editor button {
-      flex: 1; padding: 10px 12px; border: none; border-radius: 8px; cursor: pointer;
-      background: #4a90e2; color: #fff; font-weight: 600;
-    }
-    #editor button.secondary { background: #adb5bd; color:#1b1e21; }
-  </style>
 </head>
 <body>
   <header>SpinChoice – Name Picker</header>
   <main>
     <div class="container">
-      <!-- Keep heading minimal to match wheel.html look -->
-      <h2 style="margin-top:0;">Name Picker</h2>
-
-      <div id="wheelContainer">
+      <h2>Name Picker</h2>
+      <div id="wheelContainer" style="position: relative; display: flex; flex-direction: column; align-items: center;">
         <div id="arrow"></div>
         <canvas id="wheel" width="400" height="400"></canvas>
       </div>
-
       <button id="spin">Spin</button>
       <div id="winner"></div>
     </div>
   </main>
 
-  <!-- Hidden names editor (opens with keyboard 'E' or ?edit=1) -->
-  <div id="editor" hidden>
-    <div class="panel">
-      <h3>Enter names (one per line)</h3>
-      <textarea id="namesInput"></textarea>
-      <div class="row">
-        <button id="saveNames">Save</button>
-        <button id="cancelEdit" class="secondary">Cancel</button>
-      </div>
-    </div>
-  </div>
-
   <script>
-    // ====== Visuals identical to wheel.html ======
     const canvas = document.getElementById("wheel");
     const ctx = canvas.getContext("2d");
     const winnerDisplay = document.getElementById("winner");
     const spinButton = document.getElementById("spin");
 
-    // Default demo names (safe, non-rigged)
-    let names = ["Alice","Bob","Charlie","Diana","Evan","Fiona"];
+    // Start with empty names (user must edit via code or URL)
+    let names = [];
 
-    // URL params: ?names=Alice,Bob,...  and/or ?edit=1 to open editor
-    const params = new URLSearchParams(location.search);
-    const urlNames = params.get("names");
-    if (urlNames) {
-      names = urlNames.split(",").map(n => n.trim()).filter(Boolean);
+    // Default fallback demo names (optional, delete if you want truly blank)
+    if (names.length === 0) {
+      names = ["Alice","Bob","Charlie","Diana"];
     }
-    const openEditorOnLoad = params.get("edit") === "1";
 
-    // Rotation state
     let rotation = 0;
     let spinning = false;
 
-    function drawWheel(list) {
-      if (!list.length) return;
-      const R = canvas.width / 2;
-      const slice = (2 * Math.PI) / list.length;
+    function drawWheel() {
+      if (names.length === 0) return;
+      const R = canvas.width/2;
+      const slice = (2 * Math.PI) / names.length;
 
       ctx.clearRect(0,0,canvas.width,canvas.height);
 
-      list.forEach((name, i) => {
+      names.forEach((name, i) => {
         const a0 = rotation + i * slice;
         const a1 = a0 + slice;
 
-        // Alternating subtle tones (match flat UI)
         ctx.beginPath();
-        ctx.moveTo(R, R);
-        ctx.arc(R, R, R, a0, a1);
+        ctx.moveTo(R,R);
+        ctx.arc(R,R,R,a0,a1);
         ctx.closePath();
-        ctx.fillStyle = (i % 2 === 0) ? "#f1f3f6" : "#dfe6ee";
+        ctx.fillStyle = i % 2 === 0 ? "#f1f3f6" : "#dfe6ee";
         ctx.fill();
 
-        // Text
         ctx.save();
-        ctx.translate(R, R);
+        ctx.translate(R,R);
         ctx.rotate(a0 + slice/2);
         ctx.fillStyle = "#333";
         ctx.font = "16px Segoe UI";
         ctx.textAlign = "right";
-        ctx.fillText(name, R - 10, 5);
+        ctx.fillText(name, R-10, 5);
         ctx.restore();
       });
     }
-
-    function easeOutCubic(t) { return 1 - Math.pow(1 - t, 3); }
 
     function spinRandom() {
       if (spinning || names.length === 0) return;
       spinning = true;
       winnerDisplay.textContent = "";
 
-      // Choose a random winner index
       const winnerIndex = Math.floor(Math.random() * names.length);
-
-      // Compute final rotation so winner lands under pointer (top center = 270°)
       const slice = (2 * Math.PI) / names.length;
-      const targetAngle = (3 * Math.PI / 2) - (winnerIndex * slice + slice / 2);
-      const spins = 5; // number of full spins before stopping
-      const finalRotation = spins * 2 * Math.PI + targetAngle;
+      const targetAngle = (3 * Math.PI / 2) - (winnerIndex * slice + slice/2);
+      const spins = 5;
+      const finalRotation = spins*2*Math.PI + targetAngle;
 
-      let start = null;
-      const duration = 3000;
+      let start=null;
+      const duration=3000;
 
-      function animate(ts) {
-        if (!start) start = ts;
-        const p = Math.min((ts - start) / duration, 1);
-        rotation = finalRotation * easeOutCubic(p);
-        drawWheel(names);
+      function animate(ts){
+        if(!start) start=ts;
+        const p=Math.min((ts-start)/duration,1);
+        rotation = finalRotation*(1-Math.pow(1-p,3));
+        drawWheel();
 
-        if (p < 1) {
-          requestAnimationFrame(animate);
-        } else {
+        if(p<1){ requestAnimationFrame(animate); }
+        else {
           rotation = finalRotation;
-          drawWheel(names);
+          drawWheel();
           winnerDisplay.textContent = "Winner: " + names[winnerIndex];
-          // Do NOT remove names here (non-rigged, public page).
-          spinning = false;
+          spinning=false;
         }
       }
       requestAnimationFrame(animate);
     }
 
-    // Initial draw
-    drawWheel(names);
     spinButton.addEventListener("click", spinRandom);
-
-    // ====== Hidden editor (keeps look identical until opened) ======
-    const editor = document.getElementById("editor");
-    const namesInput = document.getElementById("namesInput");
-    const saveNames = document.getElementById("saveNames");
-    const cancelEdit = document.getElementById("cancelEdit");
-
-    function openEditor() {
-      namesInput.value = names.join("\n");
-      editor.hidden = false;
-    }
-    function closeEditor() { editor.hidden = true; }
-
-    saveNames.addEventListener("click", () => {
-      const list = namesInput.value
-        .split("\n")
-        .map(n => n.trim())
-        .filter(Boolean);
-      if (list.length) {
-        names = list;
-        rotation = 0;
-        winnerDisplay.textContent = "";
-        drawWheel(names);
-      }
-      closeEditor();
-    });
-
-    cancelEdit.addEventListener("click", closeEditor);
-
-    // Keyboard shortcut: press 'E' to open editor
-    document.addEventListener("keydown", (e) => {
-      if (e.key.toLowerCase() === "e" && editor.hidden) openEditor();
-      else if (e.key === "Escape" && !editor.hidden) closeEditor();
-    });
-
-    // If ?edit=1, open editor on load
-    if (openEditorOnLoad) openEditor();
+    drawWheel();
   </script>
 </body>
 </html>
