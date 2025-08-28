@@ -1,141 +1,60 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8">
-  <title>SpinChoice – Random Name Picker</title>
-  <link rel="stylesheet" href="style.css">
-  <style>
-    #wheelContainer {
-      position: relative;
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-    }
-    #inputBox {
-      width: 100%;
-      height: 100px;
-      font-family: Segoe UI, sans-serif;
-      font-size: 14px;
-      padding: 8px;
-      margin-bottom: 10px;
-      border: 1px solid #ccc;
-      border-radius: 6px;
-      resize: vertical;
-    }
-    .options {
-      margin: 10px 0;
-      font-size: 14px;
-      color: #444;
-    }
-    .options label {
-      margin-right: 10px;
-    }
-  </style>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Spin & Decide – Create Your Own Wheel</title>
+<link rel="stylesheet" href="style.css">
 </head>
 <body>
-  <header>SpinChoice – Spin. Decide. Pick Names.</header>
-  <main>
-    <div class="container">
-      <h2>Create Your Wheel</h2>
-      <textarea id="inputBox" placeholder="Enter names here, one per line..."></textarea>
-      
-      <div class="options">
-        <label><input type="checkbox"> Shuffle names</label>
-        <label><input type="checkbox"> Remove winner after spin</label>
-        <label><input type="checkbox"> Allow duplicates</label>
-      </div>
+<header>🎯 Spin & Decide – Create Your Own Wheel</header>
+<main>
+<div id="wheelCard">
+  <div id="container">
+    <div id="pointer"></div>
+    <canvas id="wheel" width="600" height="600"></canvas>
+  </div>
+  <button id="spinBtn">Spin!</button>
+  <p id="winner"></p>
+</div>
+<div id="optionsCard">
+  <h2>Enter Names</h2>
+  <textarea id="namesInput" placeholder="Enter one name per line"></textarea>
+  <div class="fakeOption"><input type="checkbox" checked> Remove name after spin</div>
+  <div class="fakeOption"><input type="checkbox"> Shuffle names each round</div>
+  <div class="fakeOption"><input type="checkbox"> Play sound on spin</div>
+  <div class="fakeOption"><input type="checkbox" id="darkMode"> Dark mode</div>
+  <button id="saveBtn">Save Settings</button>
+  <div id="saveMsg">✅ Settings saved!</div>
+</div>
+</main>
+<footer>
+  <a href="#">About</a> • <a href="#">Contact</a> • <a href="#">Privacy</a> • <a href="#">Terms</a>
+</footer>
+<script src="script.js"></script>
+<script>
+const canvas = document.getElementById("wheel");
+const winnerEl = document.getElementById("winner");
+const spinBtn = document.getElementById("spinBtn");
+let isSpinning = false;
+let spinStep = 0;
 
-      <div id="wheelContainer">
-        <div id="arrow"></div>
-        <canvas id="wheel" width="400" height="400"></canvas>
-      </div>
-      
-      <button id="spin">Spin</button>
-      <div id="winner"></div>
-    </div>
-  </main>
+function getNames(){ 
+  return document.getElementById("namesInput").value.split("\n").filter(n=>n.trim()!==""); 
+}
 
-  <script>
-    const canvas = document.getElementById("wheel");
-    const ctx = canvas.getContext("2d");
-    const arrow = document.getElementById("arrow");
-    const winnerDisplay = document.getElementById("winner");
-    const spinButton = document.getElementById("spin");
-    const inputBox = document.getElementById("inputBox");
+function draw(){ drawWheel(canvas,getNames()); }
 
-    let names = ["Alice","Bob","Charlie","David"]; // default demo names
-    let rotation = 0;
+draw();
+document.getElementById("namesInput").addEventListener("input",draw);
 
-    function drawWheel() {
-      if (names.length === 0) return;
-      const sliceAngle = (2 * Math.PI) / names.length;
-      ctx.clearRect(0,0,canvas.width,canvas.height);
-      names.forEach((name,i) => {
-        const angle = i * sliceAngle + rotation;
-        ctx.beginPath();
-        ctx.moveTo(canvas.width/2, canvas.height/2);
-        ctx.arc(canvas.width/2, canvas.height/2, canvas.width/2, angle, angle+sliceAngle);
-        ctx.closePath();
-        ctx.fillStyle = i % 2 === 0 ? "#f1f3f6" : "#dfe6ee";
-        ctx.fill();
-        ctx.save();
-        ctx.translate(canvas.width/2, canvas.height/2);
-        ctx.rotate(angle + sliceAngle/2);
-        ctx.fillStyle = "#333";
-        ctx.font = "16px Segoe UI";
-        ctx.textAlign = "right";
-        ctx.fillText(name, canvas.width/2 - 10, 5);
-        ctx.restore();
-      });
-    }
+spinBtn.addEventListener("click",()=>{
+  if(isSpinning) return;
+  const names = getNames();
+  if(names.length===0) return alert("Enter at least one name!");
+  isSpinning = true;
+  winnerEl.textContent="";
+  spinWheel(canvas,names,spinStep,winnerEl,()=>{ isSpinning=false; spinStep++; draw(); });
+});
 
-    function spinWheel() {
-      if (names.length === 0) {
-        winnerDisplay.textContent = "Please enter at least one name.";
-        return;
-      }
-      const winnerIndex = Math.floor(Math.random() * names.length);
-      const sliceAngle = (2 * Math.PI) / names.length;
-      const targetAngle = (3 * Math.PI/2) - (winnerIndex * sliceAngle + sliceAngle/2);
-      const spins = 5;
-      const finalRotation = spins * 2 * Math.PI + targetAngle;
-
-      let start = null;
-      function animate(time) {
-        if (!start) start = time;
-        const progress = (time - start) / 3000;
-        if (progress < 1) {
-          rotation = finalRotation * easeOut(progress);
-          drawWheel();
-          requestAnimationFrame(animate);
-        } else {
-          rotation = finalRotation;
-          drawWheel();
-          winnerDisplay.textContent = "Winner: " + names[winnerIndex];
-        }
-      }
-      requestAnimationFrame(animate);
-    }
-
-    function easeOut(t) {
-      return 1 - Math.pow(1 - t, 3);
-    }
-
-    inputBox.addEventListener("input", () => {
-      const inputNames = inputBox.value
-        .split("\n")
-        .map(n => n.trim())
-        .filter(n => n);
-      if (inputNames.length > 0) {
-        names = inputNames;
-      } else {
-        names = ["Alice","Bob","Charlie","David"];
-      }
-      drawWheel();
-    });
-
-    drawWheel();
-    spinButton.addEventListener("click", spinWheel);
-  </script>
-</body>
-</html>
+document.getElementById("save
