@@ -1,103 +1,287 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8">
-  <title>SpinChoice – Name Picker</title>
-  <link rel="stylesheet" href="style.css">
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Spin & Decide – Random Name Picker Tool</title>
+<style>
+:root {
+  --bg: #f8f9fa;
+  --card: #fff;
+  --text: #222;
+  --primary: #2a9d8f;
+  --secondary: #457b9d;
+  --highlight: #e63946;
+}
+body.dark {
+  --bg: #1e1e1e;
+  --card: #2c2c2c;
+  --text: #f1f1f1;
+  --primary: #06d6a0;
+  --secondary: #118ab2;
+  --highlight: #ef476f;
+}
+
+body {
+  margin: 0;
+  font-family: "Segoe UI", sans-serif;
+  background: var(--bg);
+  display: flex;
+  flex-direction: column;
+  min-height: 100vh;
+  color: var(--text);
+  transition: background 0.3s, color 0.3s;
+}
+
+/* Header */
+header {
+  background: #264653;
+  color: white;
+  padding: 25px;
+  font-size: 26px;
+  font-weight: 700;
+  text-align: center;
+  box-shadow: 0 2px 5px rgba(0,0,0,0.15);
+  transition: background 0.3s;
+}
+body.dark header { background: #111; }
+
+/* Main Layout */
+main {
+  flex: 1;
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  padding: 30px;
+  gap: 25px;
+}
+
+/* Wheel Card */
+#wheelCard {
+  background: var(--card);
+  border-radius: 12px;
+  padding: 20px 25px 40px;
+  box-shadow: 0 6px 20px rgba(0,0,0,0.12);
+  text-align: center;
+  flex: 1;
+  min-width: 340px;
+  max-width: 550px;
+  transition: background 0.3s;
+}
+#container { position: relative; margin: 0 auto; }
+canvas { width: 100%; height: 100%; border-radius: 50%; display: block; }
+#pointer {
+  width: 0; height: 0;
+  border-left: 20px solid transparent;
+  border-right: 20px solid transparent;
+  border-top: 40px solid var(--highlight);
+  position: absolute; top: -40px; left: 50%;
+  transform: translateX(-50%); z-index: 10;
+}
+button {
+  margin-top: 20px; padding: 12px 25px; font-size: 16px; font-weight: 600;
+  color: white; background: var(--primary); border: none; border-radius: 6px;
+  cursor: pointer; transition: background 0.2s, transform 0.1s;
+}
+button:hover { background: #21867a; }
+button:active { transform: scale(0.96); }
+
+#winner {
+  margin-top: 20px; font-size: 20px; font-weight: 600;
+  background: #f1faee; border: 1px solid #a8dadc; border-radius: 6px;
+  padding: 10px; display: inline-block; color: #333;
+}
+body.dark #winner { background: #333; border: 1px solid #666; color: #f1f1f1; }
+
+/* Sidebar (matches your wheel.html look) */
+#optionsCard {
+  background: var(--card);
+  border-radius: 12px;
+  padding: 25px 20px;
+  box-shadow: 0 6px 20px rgba(0,0,0,0.12);
+  flex: 1;
+  min-width: 280px;
+  max-width: 350px;
+  transition: background 0.3s;
+}
+#optionsCard h2 {
+  font-size: 20px; margin-bottom: 15px;
+  border-bottom: 2px solid #eee; padding-bottom: 8px;
+}
+textarea {
+  width: 100%; min-height: 150px; border: 1px solid #ddd; border-radius: 6px;
+  padding: 10px; font-size: 14px; resize: none; margin-bottom: 20px;
+  background: var(--bg); color: var(--text);
+}
+.fakeOption { display: flex; align-items: center; margin-bottom: 12px; font-size: 14px; }
+.fakeOption input { margin-right: 10px; }
+#saveBtn {
+  margin-top: 10px; width: 100%; padding: 10px; font-weight: 600;
+  border: none; border-radius: 6px; background: var(--secondary); color: white;
+  cursor: pointer; transition: background 0.2s;
+}
+#saveBtn:hover { background: #1d3557; }
+#saveMsg { margin-top: 10px; font-size: 13px; color: var(--primary); font-weight: 600; display: none; }
+
+/* Footer */
+footer {
+  background: #f8f9fa; color: #555; font-size: 14px; text-align: center;
+  padding: 15px; border-top: 1px solid #ddd; transition: background 0.3s, color 0.3s;
+}
+footer a { color: var(--secondary); text-decoration: none; margin: 0 8px; }
+footer a:hover { text-decoration: underline; }
+body.dark footer { background: #111; color: #aaa; }
+</style>
 </head>
 <body>
-  <header>SpinChoice – Name Picker</header>
-  <main>
-    <div class="container">
-      <h2>Name Picker</h2>
-      <div id="wheelContainer" style="position: relative; display: flex; flex-direction: column; align-items: center;">
-        <div id="arrow"></div>
-        <canvas id="wheel" width="400" height="400"></canvas>
-      </div>
-      <button id="spin">Spin</button>
-      <div id="winner"></div>
+<header>🎯 Spin & Decide – Random Name Picker Tool</header>
+
+<main>
+  <!-- Wheel Card (identical layout) -->
+  <div id="wheelCard">
+    <div id="container">
+      <div id="pointer"></div>
+      <canvas id="wheel" width="600" height="600"></canvas>
     </div>
-  </main>
+    <button id="spinBtn">Spin!</button>
+    <p id="winner"></p>
+  </div>
 
-  <script>
-    const canvas = document.getElementById("wheel");
-    const ctx = canvas.getContext("2d");
-    const winnerDisplay = document.getElementById("winner");
-    const spinButton = document.getElementById("spin");
+  <!-- Options Card (identical, but editable textarea) -->
+  <div id="optionsCard">
+    <h2>Participants</h2>
+    <textarea id="namesBox" placeholder="Enter one name per line...">Alice
+Bob
+Charlie
+Diana</textarea>
 
-    // Start with empty names (user must edit via code or URL)
-    let names = [];
+    <h2>Wheel Settings</h2>
+    <div class="fakeOption"><input type="checkbox" id="optRemove"> Remove name after spin</div>
+    <div class="fakeOption"><input type="checkbox" id="optSound"> Play sound on spin</div>
+    <div class="fakeOption"><input type="checkbox" id="optShuffle"> Shuffle names each round</div>
+    <div class="fakeOption"><input type="checkbox" id="darkMode"> Dark mode</div>
+    <button id="saveBtn">Save Settings</button>
+    <div id="saveMsg">✅ Settings saved!</div>
+  </div>
+</main>
 
-    // Default fallback demo names (optional, delete if you want truly blank)
-    if (names.length === 0) {
-      names = ["Alice","Bob","Charlie","Diana"];
+<footer>
+  <a href="#">About</a> • 
+  <a href="#">Contact</a> • 
+  <a href="#">Privacy</a> • 
+  <a href="#">Terms</a>
+</footer>
+
+<script>
+let names = [];
+let isSpinning = false;
+
+const canvas = document.getElementById("wheel");
+const ctx = canvas.getContext("2d");
+const spinBtn = document.getElementById("spinBtn");
+const winnerEl = document.getElementById("winner");
+const namesBox = document.getElementById("namesBox");
+
+// Read names from textarea
+function getNames() {
+  return namesBox.value
+    .split("\n")
+    .map(n => n.trim())
+    .filter(n => n.length > 0);
+}
+
+function drawWheel(list) {
+  const size = canvas.width;
+  const radius = size/2;
+  const slices = list.length || 1;
+  const sliceAngle = 2*Math.PI/slices;
+
+  ctx.clearRect(0,0,size,size);
+
+  for (let i=0;i<slices;i++) {
+    ctx.beginPath();
+    ctx.moveTo(radius,radius);
+    ctx.arc(radius,radius,radius,i*sliceAngle,(i+1)*sliceAngle);
+    ctx.fillStyle = i % 2 === 0 ? "#a8dadc" : "#dee2e6";
+    ctx.fill();
+    ctx.strokeStyle = "#fff";
+    ctx.lineWidth = 2;
+    ctx.stroke();
+
+    if (list[i]) {
+      ctx.save();
+      ctx.translate(radius,radius);
+      ctx.rotate(i*sliceAngle + sliceAngle/2);
+      ctx.textAlign="right";
+      ctx.fillStyle="#222";
+      ctx.font="18px Segoe UI";
+      ctx.fillText(list[i], radius-15, 5);
+      ctx.restore();
     }
+  }
+}
 
-    let rotation = 0;
-    let spinning = false;
+function spinWheel() {
+  names = getNames();
+  if (isSpinning || names.length===0) {
+    if (names.length===0) alert("Please enter at least one name on the left.");
+    return;
+  }
+  isSpinning = true;
+  winnerEl.textContent = "";
 
-    function drawWheel() {
-      if (names.length === 0) return;
-      const R = canvas.width/2;
-      const slice = (2 * Math.PI) / names.length;
+  // Pick a random winner from current list
+  const slices = names.length;
+  const sliceAngle = 360/slices;
+  const winnerIndex = Math.floor(Math.random() * slices);
 
-      ctx.clearRect(0,0,canvas.width,canvas.height);
+  // rotation so winner slice aligns with pointer (top = 270°)
+  const stopAngle = 360*5 + (270 - (winnerIndex*sliceAngle + sliceAngle/2));
 
-      names.forEach((name, i) => {
-        const a0 = rotation + i * slice;
-        const a1 = a0 + slice;
+  let start=null;
+  const duration = 4500;
+  function animate(timestamp){
+    if(!start) start=timestamp;
+    const progress = Math.min((timestamp-start)/duration,1);
+    const eased = 1-Math.pow(1-progress,3);
+    const angle = stopAngle*eased;
+    canvas.style.transform = `rotate(${angle}deg)`;
 
-        ctx.beginPath();
-        ctx.moveTo(R,R);
-        ctx.arc(R,R,R,a0,a1);
-        ctx.closePath();
-        ctx.fillStyle = i % 2 === 0 ? "#f1f3f6" : "#dfe6ee";
-        ctx.fill();
-
-        ctx.save();
-        ctx.translate(R,R);
-        ctx.rotate(a0 + slice/2);
-        ctx.fillStyle = "#333";
-        ctx.font = "16px Segoe UI";
-        ctx.textAlign = "right";
-        ctx.fillText(name, R-10, 5);
-        ctx.restore();
-      });
-    }
-
-    function spinRandom() {
-      if (spinning || names.length === 0) return;
-      spinning = true;
-      winnerDisplay.textContent = "";
-
-      const winnerIndex = Math.floor(Math.random() * names.length);
-      const slice = (2 * Math.PI) / names.length;
-      const targetAngle = (3 * Math.PI / 2) - (winnerIndex * slice + slice/2);
-      const spins = 5;
-      const finalRotation = spins*2*Math.PI + targetAngle;
-
-      let start=null;
-      const duration=3000;
-
-      function animate(ts){
-        if(!start) start=ts;
-        const p=Math.min((ts-start)/duration,1);
-        rotation = finalRotation*(1-Math.pow(1-p,3));
-        drawWheel();
-
-        if(p<1){ requestAnimationFrame(animate); }
-        else {
-          rotation = finalRotation;
-          drawWheel();
-          winnerDisplay.textContent = "Winner: " + names[winnerIndex];
-          spinning=false;
-        }
-      }
+    if(progress<1){
       requestAnimationFrame(animate);
+    } else {
+      winnerEl.textContent = "🎉 " + names[winnerIndex] + " was picked!";
+      // Optional realism: only remove if the box’s checkbox is checked
+      if (document.getElementById("optRemove").checked) {
+        // Remove winner from the textarea for the next round
+        const updated = names.filter((_,i)=>i!==winnerIndex).join("\n");
+        namesBox.value = updated;
+      }
+      isSpinning=false;
     }
+  }
+  requestAnimationFrame(animate);
+}
 
-    spinButton.addEventListener("click", spinRandom);
-    drawWheel();
-  </script>
+// Live redraw when names change
+namesBox.addEventListener("input", () => drawWheel(getNames()));
+drawWheel(getNames());
+
+// Spin
+spinBtn.addEventListener("click",spinWheel);
+
+// Fake save settings
+document.getElementById("saveBtn").addEventListener("click",()=>{
+  const msg=document.getElementById("saveMsg");
+  msg.style.display="block";
+  setTimeout(()=>{msg.style.display="none";},2000);
+});
+
+// Dark mode toggle
+document.getElementById("darkMode").addEventListener("change",(e)=>{
+  if(e.target.checked){ document.body.classList.add("dark"); }
+  else { document.body.classList.remove("dark"); }
+});
+</script>
 </body>
 </html>
