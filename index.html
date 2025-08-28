@@ -251,15 +251,20 @@ function spinWheel() {
     if(progress<1){
       requestAnimationFrame(animate);
     } else {
-      winnerEl.textContent = "🎉 " + names[winnerIndex] + " was picked!";
-      // Optional realism: only remove if the box’s checkbox is checked
-      if (document.getElementById("optRemove").checked) {
-        // Remove winner from the textarea for the next round
-        const updated = names.filter((_,i)=>i!==winnerIndex).join("\n");
-        namesBox.value = updated;
-      }
-      isSpinning=false;
-    }
+      } else {
+  // show winner AFTER the spin ends
+  const winner = names[winnerIndex];
+  winnerEl.textContent = "🎉 " + winner + " was picked!";
+
+  // ALWAYS remove winner from both the array and the textarea
+  names.splice(winnerIndex, 1);                  // update in-memory list
+  namesBox.value = names.join("\n");             // update the textbox
+
+  // redraw the wheel with the reduced name list
+  drawWheel(names);
+
+  isSpinning = false;
+};
   }
   requestAnimationFrame(animate);
 }
